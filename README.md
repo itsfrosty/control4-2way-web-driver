@@ -1,6 +1,4 @@
 # control4-2way-web-driver
-Control4-2Way-Web-Driver:
---------------------------
 
 This driver allows you to get and set the state of any control4 device by making
 an http request. The response is in JSON format.
@@ -30,7 +28,7 @@ http://CONTROLLER_IP:9000/?command=get&proxyID=34&variableID=1132,1130
 Result: {"1132":"68","1130":"67","success":"true"}
 which means the thermostat is set to 68F and current temperature is 67F
 
-- Update the current level of dimmer light:
+- Update the temperature of thermostat:
 http://CONTROLLER_IP:9000/?command=set&proxyID=34&variableID=1132&newValue=66
 
 Result: {"success":"true"}
