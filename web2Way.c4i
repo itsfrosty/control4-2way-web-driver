@@ -6,7 +6,7 @@
     <model>Web 2-Way</model>
     <created>12/10/2016 7:01 AM</created>
     <modified>12/10/2016 10:20 AM</modified>
-    <version>43</version>
+    <version>44</version>
     <small>devices_sm\C4.gif</small>
     <large>devices_lg\C4.gif</large>
     <control>lua_gen</control>
@@ -167,7 +167,6 @@ function processRequest(params)
   elseif (params.command == 'get') then
     msg = '{';
     for variableID in string.gmatch(params.variableID, "%d+") do
-       print(variableID)
        msg = msg .. '"' .. variableID .. '":"' .. getVariable(params.proxyID, variableID) .. '",'
     end
     msg = msg .. '"success":"true"}'
