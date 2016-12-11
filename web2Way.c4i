@@ -77,7 +77,7 @@ it to internet and also make sure you have a secured wifi.
 </documentation>
         <script><![CDATA[local HTTP_PORT = 9000
 g_isInitialized = false
-g_debugMode = true
+g_debugMode = false
 
 function OnDriverDestroyed()
   C4:DestroyServer()
