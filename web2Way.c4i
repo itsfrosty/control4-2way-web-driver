@@ -1,0 +1,211 @@
+<devicedata>
+    <copyright>Copyright 2016 itsfrosty.  All rights reserved.</copyright>
+    <creator>Controller</creator>
+    <manufacturer>itsfrosty</manufacturer>
+    <name>Web 2-Way</name>
+    <model>Web 2-Way</model>
+    <created>12/10/2016 7:01 AM</created>
+    <modified>12/10/2016 10:20 AM</modified>
+    <version>43</version>
+    <small>devices_sm\C4.gif</small>
+    <large>devices_lg\C4.gif</large>
+    <control>lua_gen</control>
+    <controlmethod>ip</controlmethod>
+    <driver>DriverWorks</driver>
+    <combo>True</combo>
+    <OnlineCategory>others</OnlineCategory>
+    <proxies qty="1">
+		<proxy>webevents</proxy>
+    </proxies>
+    <config>
+        <power_management_method>AlwaysOn</power_management_method>
+        <power_command_delay>0</power_command_delay>
+        <power_delay>0</power_delay>
+        <power_command_needed>False</power_command_needed>
+        <documentation>Copyright 2016 itsfrosty
+This driver allows you to get and set the state of any control4 device by making
+an http request. The response is in JSON format.
+
+Use Case:
+---------
+I am using this (along with my homebridge-c4-plugin) to connect homekit to my
+control4. So I can say "Siri turn on Kitchen Lights" or "Siri is my garage door
+closed". You can use this with any other hub which supports making http requests.
+
+Examples:
+----------
+- Get the current level of dimmer light:
+http://CONTROLLER_IP:9000/?command=get&amp;proxyID=25&amp;variableID=1001
+
+Result: {"1001":"75"}
+which means the dimmer light with proxyID 25 is currently at 75%
+
+- Update the current level of dimmer light:
+http://CONTROLLER_IP:9000/?command=set&amp;proxyID=25&amp;variableID=1001&amp;newValue=100
+
+Result: {"success":"true"}
+
+- Get the current temperature set for thermostat:
+http://CONTROLLER_IP:9000/?command=get&amp;proxyID=34&amp;variableID=1132,1130
+
+Result: {"1132":"68","1130":"67","success":"true"}
+which means the thermostat is set to 68F and current temperature is 67F
+
+- Update the current level of dimmer light:
+http://CONTROLLER_IP:9000/?command=set&amp;proxyID=34&amp;variableID=1132&amp;newValue=66
+
+Result: {"success":"true"}
+
+How to use:
+------------
+Sorry this is not currently easy to use :(. You will have to find the variableID
+and proxyID for each device you want to connect. I hope in future we can
+make it use device names and variable names instead of IDs.
+
+- You need to either have access to ComposerPro or ask your dealer to install it
+for you.
+- To find proxyID, mouse over the device or check info for the device.
+- To find variableID, execute:
+for k,v in pairs(C4:GetDeviceVariables(34)) do print(k, v.name, v.value) end
+which will print all variables, their IDs and current values.
+
+Warning:
+---------
+This is completely unencrypted and unsecure. Anybody with access to your wifi
+will be able to control any of your control4 connected devices. So don't open
+it to internet and also make sure you have a secured wifi.
+</documentation>
+        <script><![CDATA[local HTTP_PORT = 9000
+g_isInitialized = false
+g_debugMode = true
+
+function OnDriverDestroyed()
+  C4:DestroyServer()
+end
+
+function MyDriverInit()
+  if (g_isInitialized == true) then
+    return
+  end
+  g_isInitialized = true
+
+  C4:CreateServer(HTTP_PORT)
+end
+
+function OnTimerExpired(idTimer)
+  if (idTimer == gInitTimer) then
+    MyDriverInit()
+    gInitTimer = C4:KillTimer(gInitTimer)
+  end
+end
+
+function OnPropertyChanged(strProperty)
+  local prop = Properties[strProperty]
+
+  if (strProperty == "Debug") then
+    if (prop == "On") then
+      g_debugMode = true;
+    else
+      g_debugMode = false;
+    end
+  end
+end
+
+function debugPrint(str)
+  if (g_debugMode) then
+    print(str)
+  end
+end
+
+function urldecode(str)
+  str = str:gsub('+', ' ')
+  str = str:gsub('%%(%x%x)', function(h)
+    return string.char(tonumber(h, 16))
+    end)
+  return str
+end
+
+function parseRequest(recRequest)
+  local _, _, url = string.find(recRequest, "GET /(.*) HTTP")
+  url = url or ""
+  debugPrint("URL: " .. url)
+  if (string.len(url) == 0) then
+    return nil
+  end
+
+  local params = {}
+  url = url:gsub('?', '  ', 1)
+  url = url:match('%s+(.+)')
+
+  if (url == '' or url == nil) then
+    return params
+  end
+
+  for k,v in url:gmatch('([^&=?]-)=([^&=?]+)' ) do
+    params[k] = urldecode(v)
+  end
+  return params
+end
+
+function setVariable(proxyID, variableID, newValue)
+  if (newValue == nil or newValue == '0' or newValue == '') then
+    newValue = 0
+  end
+  C4:SetDeviceVariable(proxyID, variableID, newValue)
+end
+
+function getVariable(proxyID, variableID)
+  return C4:GetDeviceVariable(proxyID, variableID)
+end
+
+function processRequest(params)
+  if (params.proxyID == nil or params.variableID == nil) then
+    msg = '{"success":"false"}';
+  elseif (params.command == 'set') then
+    setVariable(params.proxyID, params.variableID, params.newValue)
+    msg = '{"success":"true"}';
+  elseif (params.command == 'get') then
+    msg = '{';
+    for variableID in string.gmatch(params.variableID, "%d+") do
+       print(variableID)
+       msg = msg .. '"' .. variableID .. '":"' .. getVariable(params.proxyID, variableID) .. '",'
+    end
+    msg = msg .. '"success":"true"}'
+  else
+    msg = '{"success":"false"}';
+  end
+  return msg
+end
+
+function OnServerDataIn(nHandle, strData)
+  local msg = '';
+
+  params = parseRequest(strData)
+  result = processRequest(params)
+
+  local headers = "HTTP/1.1 200 OK\r\nContent-Length: " .. result:len() .. "\r\nContent-Type: application/json\r\n\r\n"
+  C4:ServerSend(nHandle,  headers .. result)
+  C4:ServerCloseClient(nHandle)
+end
+
+gInitTimer = C4:AddTimer(5, "SECONDS")]]></script>
+		<actions>
+            <action>
+                <name>Default Action</name>
+                <command>DEFAULT_ACTION</command>
+            </action>
+        </actions>
+        <properties>
+            <property>
+                <name>Debug</name>
+                <type>LIST</type>
+                <readonly>false</readonly>
+                <default>Off</default>
+                <items>
+                    <item>Off</item>
+                    <item>On</item>
+                </items>
+            </property>
+        </properties>
+    </config>
+</devicedata>
