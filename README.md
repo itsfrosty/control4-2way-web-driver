@@ -33,6 +33,11 @@ http://CONTROLLER_IP:9000/?command=set&proxyID=34&variableID=1132&newValue=66
 
 Result: {"success":"true"}
 
+- Get list of all variables for a device:
+http://CONTROLLER_IP:9000/?command=getvariables&proxyID=25
+
+Result: {"1005":"MAX_ON_LEVEL","1006":"MIN_ON_LEVEL","1003":"CLICK_RAMP_RATE_DOWN","1007":"START_ON_LEVEL","1000":"LIGHT_STATE","1004":"PRESET_LEVEL","1008":"START_ON_TIME_MS","1001":"LIGHT_LEVEL","1002":"CLICK_RAMP_RATE_UP","success":"true"}
+
 How to use:
 ------------
 Sorry this is not currently easy to use :(. You will have to find the variableID
