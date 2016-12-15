@@ -6,7 +6,7 @@
     <model>Web 2-Way</model>
     <created>12/10/2016 7:01 AM</created>
     <modified>12/10/2016 10:20 AM</modified>
-    <version>44</version>
+    <version>49</version>
     <small>devices_sm\C4.gif</small>
     <large>devices_lg\C4.gif</large>
     <control>lua_gen</control>
@@ -170,6 +170,12 @@ function processRequest(params)
        msg = msg .. '"' .. variableID .. '":"' .. getVariable(params.proxyID, variableID) .. '",'
     end
     msg = msg .. '"success":"true"}'
+  elseif (params.command == 'getvariables') then
+    msg = '{';
+    for key,value in pairs(C4:GetDeviceVariables(params.proxyID)) do 
+	  msg = msg .. '"' .. key .. '":"' .. value.name .. '",'
+	end
+	msg = msg .. '"success":"true"}'
   else
     msg = '{"success":"false"}';
   end
