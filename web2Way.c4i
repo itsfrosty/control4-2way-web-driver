@@ -159,7 +159,7 @@ function getVariable(proxyID, variableID)
 end
 
 function processRequest(params)
-  if (params.proxyID == nil or params.variableID == nil) then
+  if (params.proxyID == nil) then
     msg = '{"success":"false"}';
   elseif (params.command == 'set') then
     setVariable(params.proxyID, params.variableID, params.newValue)
