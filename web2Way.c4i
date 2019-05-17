@@ -15,7 +15,7 @@
     <combo>True</combo>
     <OnlineCategory>others</OnlineCategory>
     <proxies qty="1">
-		<proxy>webevents</proxy>
+		<proxy>web2Way</proxy>
     </proxies>
     <config>
         <power_management_method>AlwaysOn</power_management_method>
