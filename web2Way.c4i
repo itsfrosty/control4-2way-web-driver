@@ -168,6 +168,14 @@ function getVariable(proxyID, variableID)
   return C4:GetDeviceVariable(proxyID, variableID)
 end
 
+function setMute(proxyID, muteState)
+  if (muteState == '1') then
+    C4:SendToDevice(proxyID, "MUTE_ON", {})
+ else
+    C4:SendToDevice(proxyID, "MUTE_OFF", {})
+  end
+end
+
 function processRequest(params)
   if (params.proxyID == nil) then
     msg = '{"success":"false"}';
@@ -196,6 +204,9 @@ function processRequest(params)
       msg = msg .. '"' .. key .. '":"' .. value.name .. '",'
     end
     msg = msg .. '"success":"true"}'
+  elseif (params.command == 'setmute') then
+    setMute(params.proxyID, params.newValue)
+    msg = '{"success":"true"}';
   else
     msg = '{"success":"false"}';
   end
