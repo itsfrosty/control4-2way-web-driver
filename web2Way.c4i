@@ -6,7 +6,7 @@
     <model>Web 2-Way</model>
     <created>12/10/2016 7:01 AM</created>
     <modified>12/10/2016 10:20 AM</modified>
-    <version>49</version>
+    <version>51</version>
     <small>devices_sm\C4.gif</small>
     <large>devices_lg\C4.gif</large>
     <control>lua_gen</control>
@@ -15,7 +15,7 @@
     <combo>True</combo>
     <OnlineCategory>others</OnlineCategory>
     <proxies qty="1">
-		<proxy>web2Way</proxy>
+    <proxy>web2Way</proxy>
     </proxies>
     <config>
         <power_management_method>AlwaysOn</power_management_method>
@@ -56,6 +56,21 @@ http://CONTROLLER_IP:9000/?command=set&amp;proxyID=34&amp;variableID=1132&amp;ne
 
 Result: {"success":"true"}
 
+- Set mute state for a room (for some reason the ?command=set function above does not work for the IS_MUTED variable):
+http://CONTROLLER_IP:9000/?command=setmute&amp;proxyID=34&amp;newValue=1
+
+Result: {"success":"true"}
+
+- Get current values of variables for multiple rooms in one request:
+http://CONTROLLER_IP:9000/?command=getmulti&amp;proxyID=46,54&amp;variableID=1000,1010,1011,1018
+
+Result: {"46":{"1000":"228","1010":"1","1011":"53","1018":"0"},"54":{"1000":"0","1010":"0","1011":"34","1018":"0"},"success":"true"}
+
+- Get list of all variables for a device:
+http://CONTROLLER_IP:9000/?command=getvariables&amp;proxyID=25
+
+Result: {"1005":"MAX_ON_LEVEL","1006":"MIN_ON_LEVEL","1003":"CLICK_RAMP_RATE_DOWN","1007":"START_ON_LEVEL","1000":"LIGHT_STATE","1004":"PRESET_LEVEL","1008":"START_ON_TIME_MS","1001":"LIGHT_LEVEL","1002":"CLICK_RAMP_RATE_UP","success":"true"}
+
 How to use:
 ------------
 Sorry this is not currently easy to use :(. You will have to find the variableID
@@ -67,7 +82,7 @@ for you.
 - To find proxyID, mouse over the device or check info for the device.
 - To find variableID, execute:
 for k,v in pairs(C4:GetDeviceVariables(34)) do print(k, v.name, v.value) end
-which will print all variables, their IDs and current values.
+which will print all variables, their IDs and current values. Or use "?command=getvariables", described above.
 
 Warning:
 ---------
@@ -158,6 +173,14 @@ function getVariable(proxyID, variableID)
   return C4:GetDeviceVariable(proxyID, variableID)
 end
 
+function setMute(proxyID, muteState)
+  if (muteState == '1') then
+    C4:SendToDevice(proxyID, "MUTE_ON", {})
+ else
+    C4:SendToDevice(proxyID, "MUTE_OFF", {})
+  end
+end
+
 function processRequest(params)
   if (params.proxyID == nil) then
     msg = '{"success":"false"}';
@@ -170,12 +193,25 @@ function processRequest(params)
        msg = msg .. '"' .. variableID .. '":"' .. getVariable(params.proxyID, variableID) .. '",'
     end
     msg = msg .. '"success":"true"}'
+  elseif (params.command == 'getmulti') then
+    msg = '{';
+    for proxyID in string.gmatch(params.proxyID, "%d+") do
+       msg = msg .. '"' .. proxyID .. '":{';
+       for variableID in string.gmatch(params.variableID, "%d+") do
+         msg = msg .. '"' .. variableID .. '":"' .. getVariable(proxyID, variableID) .. '",'
+       end
+       msg = string.sub(msg, 1, -2) .. '},'
+    end
+    msg = msg .. '"success":"true"}'
   elseif (params.command == 'getvariables') then
     msg = '{';
     for key,value in pairs(C4:GetDeviceVariables(params.proxyID)) do 
-	  msg = msg .. '"' .. key .. '":"' .. value.name .. '",'
-	end
-	msg = msg .. '"success":"true"}'
+      msg = msg .. '"' .. key .. '":"' .. value.name .. '",'
+    end
+    msg = msg .. '"success":"true"}'
+  elseif (params.command == 'setmute') then
+    setMute(params.proxyID, params.newValue)
+    msg = '{"success":"true"}';
   else
     msg = '{"success":"false"}';
   end
@@ -194,7 +230,7 @@ function OnServerDataIn(nHandle, strData)
 end
 
 gInitTimer = C4:AddTimer(5, "SECONDS")]]></script>
-		<actions>
+        <actions>
             <action>
                 <name>Default Action</name>
                 <command>DEFAULT_ACTION</command>

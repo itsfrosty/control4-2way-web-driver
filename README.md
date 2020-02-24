@@ -33,6 +33,16 @@ http://CONTROLLER_IP:9000/?command=set&proxyID=34&variableID=1132&newValue=66
 
 Result: {"success":"true"}
 
+- Set mute state for a room (for some reason the ?command=set function above does not work for the IS_MUTED variable):
+http://CONTROLLER_IP:9000/?command=setmute&amp;proxyID=34&amp;newValue=1
+
+Result: {"success":"true"}
+
+- Get current values of variables for multiple rooms in one request:
+http://CONTROLLER_IP:9000/?command=getmulti&proxyID=46,54&amp;variableID=1000,1010,1011,1018
+
+Result: {"46":{"1000":"228","1010":"1","1011":"53","1018":"0"},"54":{"1000":"0","1010":"0","1011":"34","1018":"0"},"success":"true"}
+
 - Get list of all variables for a device:
 http://CONTROLLER_IP:9000/?command=getvariables&proxyID=25
 
@@ -49,7 +59,7 @@ for you.
 - To find proxyID, mouse over the device or check info for the device.
 - To find variableID, execute:
 for k,v in pairs(C4:GetDeviceVariables(34)) do print(k, v.name, v.value) end
-which will print all variables, their IDs and current values.
+which will print all variables, their IDs and current values. Or use "?command=getvariables", described above.
 
 Warning:
 ---------
