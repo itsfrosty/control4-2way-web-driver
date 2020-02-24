@@ -6,7 +6,7 @@
     <model>Web 2-Way</model>
     <created>12/10/2016 7:01 AM</created>
     <modified>12/10/2016 10:20 AM</modified>
-    <version>50</version>
+    <version>51</version>
     <small>devices_sm\C4.gif</small>
     <large>devices_lg\C4.gif</large>
     <control>lua_gen</control>
@@ -53,6 +53,11 @@ which means the thermostat is set to 68F and current temperature is 67F
 
 - Update the temperature of thermostat:
 http://CONTROLLER_IP:9000/?command=set&amp;proxyID=34&amp;variableID=1132&amp;newValue=66
+
+Result: {"success":"true"}
+
+- Set mute state for a room (for some reason the ?command=set function above does not work for the IS_MUTED variable):
+http://CONTROLLER_IP:9000/?command=setmute&amp;proxyID=34&amp;newValue=1
 
 Result: {"success":"true"}
 

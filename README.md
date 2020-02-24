@@ -33,6 +33,11 @@ http://CONTROLLER_IP:9000/?command=set&proxyID=34&variableID=1132&newValue=66
 
 Result: {"success":"true"}
 
+- Set mute state for a room (for some reason the ?command=set function above does not work for the IS_MUTED variable):
+http://CONTROLLER_IP:9000/?command=setmute&amp;proxyID=34&amp;newValue=1
+
+Result: {"success":"true"}
+
 - Get current values of variables for multiple rooms in one request:
 http://CONTROLLER_IP:9000/?command=getmulti&proxyID=46,54&amp;variableID=1000,1010,1011,1018
 
